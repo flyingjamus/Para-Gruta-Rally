@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "seed:users": "node scripts/seed-users.mjs",
     "test": "vitest",
+    "test:integration": "XDG_CONFIG_HOME=/tmp/firebase-tools FIREBASE_TOOLS_DISABLE_UPDATE_CHECK=1 firebase emulators:exec --only auth,firestore 'vitest run --no-file-parallelism test/KidName.ui.spec.tsx'",
     "test:rules": "XDG_CONFIG_HOME=/tmp/firebase-tools FIREBASE_TOOLS_DISABLE_UPDATE_CHECK=1 firebase emulators:exec --only firestore,storage 'vitest run --no-file-parallelism test/*.spec.ts'"
   },
   "dependencies": {
@@ -30,6 +31,10 @@
   "devDependencies": {
     "@eslint/js": "^9.22.0",
     "@firebase/rules-unit-testing": "^5.0.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
@@ -37,6 +42,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "jsdom": "^27.0.1",
     "vite": "^6.3.1",
     "vite-plugin-env-compatible": "^2.0.1",
     "vitest": "^3.2.4"
