@@ -34,9 +34,10 @@ vi.mock('@/hooks/usePermissions', () => ({
 }));
 
 // Mock useLanguage hook
+const mockT = (key: string, fallback: string) => fallback;
 vi.mock('@/contexts/LanguageContext', () => ({
     useLanguage: vi.fn(() => ({
-        t: (key: string, fallback: string) => fallback,
+        t: mockT,
         isRTL: false,
     })),
 }));

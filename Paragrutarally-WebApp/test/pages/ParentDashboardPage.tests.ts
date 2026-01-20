@@ -160,7 +160,7 @@ export function runParentDashboardTests(setupFn: SetupFunction, options: RunPare
             expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
         });
         
-        expect(screen.getByText(newComment)).toBeInTheDocument();
+        expect(await screen.findByText(newComment)).toBeInTheDocument();
 
         if (options.afterCommentSaved) {
             await options.afterCommentSaved({ kidId: defaultKids[0].id, comment: newComment });

@@ -332,6 +332,7 @@ const FormsManagementPage = () => {
                                     className="filter-select"
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
+                                    aria-label={t('forms.status', 'Status')}
                                 >
                                     <option value="all">{t('forms.allForms', 'All Forms')}</option>
                                     <option value="active">{t('forms.status.active', 'Active')}</option>
