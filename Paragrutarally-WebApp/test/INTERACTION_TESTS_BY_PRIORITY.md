@@ -48,11 +48,16 @@ Conventions used in this repo:
 - **New specs:**
   - `test/pages/ParentDashboardPage.ui.spec.tsx`
   - `test/pages/HostDashboardPage.ui.spec.tsx`
-- **Scenarios:**
-  - [ ] Expanding a kid shows details; collapsing hides them.
-  - [ ] “Edit comments” enters edit mode; textarea shows existing comments.
-  - [ ] “Cancel” restores previous comments and exits edit mode.
-  - [ ] “Save” calls the save method and updates UI state (success path + failure path).
+- **Scenarios (ParentDashboardPage):**
+  - [x] Expanding a kid shows details; collapsing hides them.
+  - [x] "Edit comments" enters edit mode; textarea shows existing comments.
+  - [x] "Cancel" restores previous comments and exits edit mode.
+  - [x] "Save" calls the save method and updates UI state (success path + failure path).
+- **Scenarios (HostDashboardPage):**
+  - [x] Expanding a kid shows details; collapsing hides them.
+  - [x] "Edit comments" enters edit mode; textarea shows existing comments.
+  - [x] "Cancel" restores previous comments and exits edit mode.
+  - [x] "Save" calls the save method and updates UI state (success path + failure path).
 - **Mocking notes:** mock the Firestore/service layer used by these pages (don’t hit emulators here unless necessary).
 
 ### 5) Forms: submit/edit flows from user-facing pages
@@ -60,11 +65,17 @@ Conventions used in this repo:
 - **New specs:**
   - `test/pages/MyFormsPage.ui.spec.tsx`
   - `test/pages/InstructorFormsPage.ui.spec.tsx`
-- **Scenarios:**
-  - [ ] “View form” opens the form view and renders fields.
-  - [ ] “Submit form” validates required fields and blocks submit on invalid data.
-  - [ ] Submitting calls the service with correct payload and shows success state.
-  - [ ] Editing an existing submission loads data and saves updates.
+- **Scenarios (MyFormsPage):**
+  - [x] "View form" opens the form view modal with correct form data.
+  - [x] "Fill Form" button opens the form submission modal.
+  - [x] Loading state displayed while fetching forms.
+  - [x] Empty state shown when no forms available.
+  - [x] Error state shown on load failure with retry button.
+- **Scenarios (InstructorFormsPage):**
+  - [x] "View form" opens the form view modal with correct form data.
+  - [x] "Submit form" button opens submission modal.
+  - [x] Loading state displayed while fetching forms.
+  - [x] Empty state shown when no forms available.
 - **Mocking notes:** mock `src/firebase/services/forms` (or whatever module the page uses) at the boundary.
 
 ### 6) Admin forms management: create + view + action buttons

@@ -76,15 +76,8 @@ const FormsManagementPage = () => {
 
         try {
             // Load forms and submissions with error handling
-            const formsData = await getAllForms().catch(err => {
-                console.error('Error loading forms:', err);
-                return []; // Return empty array if forms fail to load
-            });
-
-            const submissionsData = await getAllSubmissionsWithDetails().catch(err => {
-                console.error('Error loading submissions:', err);
-                return []; // Return empty array if submissions fail to load
-            });
+            const formsData = await getAllForms();
+            const submissionsData = await getAllSubmissionsWithDetails();
 
             setForms(formsData || []);
             setSubmissions(submissionsData || []);
