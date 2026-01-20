@@ -37,7 +37,7 @@ export default defineConfig({
         ...sharedViteConfig,
         test: {
           name: 'ui',
-          include: ['test/**/*.ui.spec.{ts,tsx}'],
+          include: ['test/**/*.ui.spec.{ts,tsx}', 'test/**/*.unit.spec.{ts,tsx}', 'test/**/*.integration.spec.{ts,tsx}'],
           environment: 'jsdom',
           setupFiles: ['./vitest.setup.ts'],
         },

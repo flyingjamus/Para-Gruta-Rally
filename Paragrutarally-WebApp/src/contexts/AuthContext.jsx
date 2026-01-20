@@ -29,7 +29,11 @@ const ROLE_REDIRECTS = {
 };
 
 // Helper function to wait for a delay
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms) => {
+    // Skip delay in test environment
+    if (process.env.NODE_ENV === 'test') return Promise.resolve();
+    return new Promise(resolve => setTimeout(resolve, ms));
+};
 
 // Helper function to retry Firestore reads with exponential backoff
 const retryFirestoreRead = async (docRef, maxRetries = 3, baseDelay = 1000) => {

@@ -26,9 +26,38 @@ service cloud.firestore {
     // Kids collection - role-based access
     match /kids/{kidId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin() || 
-        (isAuthenticated() && 
-         get(/databases/$(database)/documents/kids/$(kidId)).data.parentInfo.parentId == request.auth.uid);
+
+      function userHasRole(role) {
+        return isAuthenticated() &&
+          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      }
+
+      function isHostOrGuest() {
+        return userHasRole('host') || userHasRole('guest');
+      }
+
+      function isKidParent() {
+        return isAuthenticated() &&
+          get(/databases/$(database)/documents/kids/$(kidId)).data.parentInfo.parentId == request.auth.uid;
+      }
+
+      function isOrgCommentsOnlyUpdate() {
+        // Only allow updating comments.organization (no other fields).
+        return
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments']) &&
+          request.resource.data.comments is map &&
+          (
+            // If comments previously absent, allow creating just { organization }
+            resource.data.comments == null
+              ? request.resource.data.comments.keys().hasOnly(['organization'])
+              : request.resource.data.comments.diff(resource.data.comments).affectedKeys().hasOnly(['organization'])
+          ) &&
+          request.resource.data.comments.organization is string;
+      }
+
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isKidParent() || (isHostOrGuest() && isOrgCommentsOnlyUpdate());
     }
     
     // Teams collection - instructors can edit their teams, others can read

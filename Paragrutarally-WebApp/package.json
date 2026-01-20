@@ -9,8 +9,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "seed:users": "node scripts/seed-users.mjs",
-    "test": "vitest",
-    "test:integration": "XDG_CONFIG_HOME=/tmp/firebase-tools FIREBASE_TOOLS_DISABLE_UPDATE_CHECK=1 firebase emulators:exec --only auth,firestore 'vitest run --no-file-parallelism test/KidName.ui.spec.tsx'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run unit.spec",
+    "test:integration": "XDG_CONFIG_HOME=/tmp/firebase-tools FIREBASE_TOOLS_DISABLE_UPDATE_CHECK=1 firebase emulators:exec --only auth,firestore 'vitest run integration.spec'",
     "test:rules": "XDG_CONFIG_HOME=/tmp/firebase-tools FIREBASE_TOOLS_DISABLE_UPDATE_CHECK=1 firebase emulators:exec --only firestore,storage 'vitest run --no-file-parallelism test/*.spec.ts'"
   },
   "dependencies": {

@@ -37,6 +37,9 @@ const HostDashboardPage = () => {
     const { permissions, userRole, userData, user } = usePermissions();
     const { t } = useLanguage();
 
+    const searchInputId = 'host-dashboard-search';
+    const eventFilterSelectId = 'host-dashboard-event-filter';
+
     const [events, setEvents] = useState([]);
     const [registeredKids, setRegisteredKids] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -293,15 +296,17 @@ const HostDashboardPage = () => {
                     {/* Search and Filter Section */}
                     <div className="search-filter-section">
                         <div className="search-container">
-                            <label className="search-label">
+                            <label className="search-label" htmlFor={searchInputId}>
                                 <Search size={16} />
                                 {t('common.search', 'Search')}
                             </label>
                             <div className="search-input-wrapper">
                                 <Search className="search-icon" size={18} />
                                 <input
+                                    id={searchInputId}
                                     type="text"
                                     className="search-input"
+                                    aria-label={t('common.search', 'Search')}
                                     placeholder={t('host.searchParticipantsPlaceholder', 'Search participants by name or number...')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -309,6 +314,7 @@ const HostDashboardPage = () => {
                                 {searchTerm && (
                                     <button
                                         className="clear-search"
+                                        aria-label={t('common.clearSearch', 'Clear search')}
                                         onClick={() => setSearchTerm('')}
                                     >
                                         ✕
@@ -318,12 +324,14 @@ const HostDashboardPage = () => {
                         </div>
 
                         <div className="filter-container">
-                            <label className="filter-label">
+                            <label className="filter-label" htmlFor={eventFilterSelectId}>
                                 <Filter size={16} />
                                 {t('common.filterByEvent', 'Filter by Event')}
                             </label>
                             <select
+                                id={eventFilterSelectId}
                                 className="filter-select"
+                                aria-label={t('common.filterByEvent', 'Filter by Event')}
                                 value={eventFilter}
                                 onChange={(e) => setEventFilter(e.target.value)}
                             >
@@ -373,16 +381,24 @@ const HostDashboardPage = () => {
                                 return (
                                     <div key={kid.id} className="card participant-card" style={{ padding: '20px' }}>
                                         {/* Participant Header */}
-                                        <div
+                                        <button
+                                            type="button"
                                             className="participant-header"
                                             style={{
                                                 display: 'flex',
                                                 justifyContent: 'space-between',
                                                 alignItems: 'center',
                                                 cursor: 'pointer',
+                                                width: '100%',
+                                                background: 'transparent',
+                                                border: 'none',
+                                                padding: 0,
+                                                textAlign: 'left',
                                                 marginBottom: isExpanded ? '20px' : '0'
                                             }}
                                             onClick={() => toggleKidExpansion(kid.id)}
+                                            aria-expanded={isExpanded}
+                                            aria-controls={`participant-details-${kid.id}`}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                                 <Users size={24} style={{ color: 'var(--racing-purple)' }} />
@@ -402,11 +418,15 @@ const HostDashboardPage = () => {
                                                 </span>
                                                 {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                             </div>
-                                        </div>
+                                        </button>
 
                                         {/* Expanded Participant Details */}
                                         {isExpanded && (
-                                            <div className="participant-details" style={{ paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+                                            <div
+                                                id={`participant-details-${kid.id}`}
+                                                className="participant-details"
+                                                style={{ paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}
+                                            >
 
                                                 {/* Basic Information - Only what guests can see */}
                                                 <div className="detail-section" style={{ marginBottom: '25px' }}>

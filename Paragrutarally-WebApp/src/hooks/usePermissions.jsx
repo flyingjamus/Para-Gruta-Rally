@@ -177,7 +177,9 @@ const createRolePermissions = (userRole = 'guest') => {
                 return kid?.parentInfo?.parentId === user?.uid;
             case 'instructor':
                 return kid?.instructorId === userData?.instructorId;
+            case 'host':
             case 'guest':
+                return true;
             default:
                 return false;
         }
@@ -190,8 +192,10 @@ const createRolePermissions = (userRole = 'guest') => {
                 return true;
             case 'instructor':
                 return kid?.instructorId === userData?.instructorId;
-            case 'parent':
+            case 'host':
             case 'guest':
+                return true; // Hosts can edit specific fields defined in FIELD_PERMISSIONS
+            case 'parent':
             default:
                 return false;
         }
