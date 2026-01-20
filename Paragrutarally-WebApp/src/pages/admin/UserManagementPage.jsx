@@ -239,8 +239,12 @@ const UserManagementPage = () => {
                     {/* OPTIMIZED Stats Cards - Single Row Layout */}
                     <div className="stats-grid-optimized">
                         <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={t('users.totalUsers', 'Total Users')}
                             className={`stat-card total ${activeCardFilter === 'total' ? 'active' : ''}`}
                             onClick={() => handleStatCardClick('total')}
+                            onKeyDown={(e) => e.key === 'Enter' && handleStatCardClick('total')}
                             style={{ cursor: 'pointer' }}
                         >
                             <Users className="stat-icon" size={40} />
@@ -251,8 +255,12 @@ const UserManagementPage = () => {
                         </div>
 
                         <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={t('users.admins', 'Admins')}
                             className={`stat-card admins ${activeCardFilter === 'admin' ? 'active' : ''}`}
                             onClick={() => handleStatCardClick('admin')}
+                            onKeyDown={(e) => e.key === 'Enter' && handleStatCardClick('admin')}
                             style={{ cursor: 'pointer' }}
                         >
                             <Crown className="stat-icon" size={40} />
@@ -263,8 +271,12 @@ const UserManagementPage = () => {
                         </div>
 
                         <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={t('users.instructors', 'Instructors')}
                             className={`stat-card instructors ${activeCardFilter === 'instructor' ? 'active' : ''}`}
                             onClick={() => handleStatCardClick('instructor')}
+                            onKeyDown={(e) => e.key === 'Enter' && handleStatCardClick('instructor')}
                             style={{ cursor: 'pointer' }}
                         >
                             <Car className="stat-icon" size={40} />
@@ -275,8 +287,12 @@ const UserManagementPage = () => {
                         </div>
 
                         <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={t('users.hosts', 'Hosts')}
                             className={`stat-card hosts ${activeCardFilter === 'host' ? 'active' : ''}`}
                             onClick={() => handleStatCardClick('host')}
+                            onKeyDown={(e) => e.key === 'Enter' && handleStatCardClick('host')}
                             style={{ cursor: 'pointer' }}
                         >
                             <Home className="stat-icon" size={40} />
@@ -287,8 +303,12 @@ const UserManagementPage = () => {
                         </div>
 
                         <div
+                            role="button"
+                            tabIndex={0}
+                            aria-label={t('users.parents', 'Parents')}
                             className={`stat-card parents ${activeCardFilter === 'parent' ? 'active' : ''}`}
                             onClick={() => handleStatCardClick('parent')}
+                            onKeyDown={(e) => e.key === 'Enter' && handleStatCardClick('parent')}
                             style={{ cursor: 'pointer' }}
                         >
                             <UserCheck className="stat-icon" size={40} />
@@ -306,6 +326,7 @@ const UserManagementPage = () => {
                                 <Search className="search-icon" size={18} />
                                 <input
                                     type="text"
+                                    aria-label={t('users.searchPlaceholder', 'Search users by name or email...')}
                                     placeholder={t('users.searchPlaceholder', 'Search users by name or email...')}
                                     className="search-input"
                                     value={searchTerm}
@@ -320,11 +341,12 @@ const UserManagementPage = () => {
                         </div>
 
                         <div className="filter-container">
-                            <label className="filter-label">
+                            <label className="filter-label" htmlFor="role-filter">
                                 <Tag className="filter-icon" size={16} />
                                 {t('users.filterByRole', 'Filter by Role')}
                             </label>
                             <select
+                                id="role-filter"
                                 className="filter-select"
                                 value={roleFilter}
                                 onChange={handleRoleFilterChange}

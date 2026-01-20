@@ -148,9 +148,14 @@ const ExportUsersModal = ({ isOpen, onClose }) => {
 
     return (
         <div className="form-creation-modal-overlay" dir={isRTL ? 'rtl' : 'ltr'}>
-            <div className="form-creation-modal-content">
+            <div 
+                className="form-creation-modal-content"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="export-users-modal-title"
+            >
                 <div className="form-creation-modal-header">
-                    <h3>
+                    <h3 id="export-users-modal-title">
                         <Users size={24} />
                         {t('users.exportUsers', 'Export Users')}
                     </h3>

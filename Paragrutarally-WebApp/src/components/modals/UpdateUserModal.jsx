@@ -142,9 +142,14 @@ const UpdateUserModal = ({ isOpen, onClose, user, onUserUpdated }) => {
 
     return (
         <div className="form-creation-modal-overlay" dir={isRTL ? 'rtl' : 'ltr'}>
-            <div className="form-creation-modal-content">
+            <div 
+                className="form-creation-modal-content"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="update-user-modal-title"
+            >
                 <div className="form-creation-modal-header">
-                    <h3>
+                    <h3 id="update-user-modal-title">
                         <UserEdit size={24} />
                         {t('users.updateUser', 'Update User')}
                     </h3>

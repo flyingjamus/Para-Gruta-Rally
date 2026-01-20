@@ -191,9 +191,14 @@ const CreateUserModal = ({ isOpen, onClose, onUserCreated }) => {
 
     return (
         <div className="form-creation-modal-overlay" dir={isRTL ? 'rtl' : 'ltr'}>
-            <div className="form-creation-modal-content">
+            <div 
+                className="form-creation-modal-content"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="create-user-modal-title"
+            >
                 <div className="form-creation-modal-header">
-                    <h3>
+                    <h3 id="create-user-modal-title">
                         <UserPlus size={24} />
                         {t('users.createNewUser', 'Create New User')}
                     </h3>

@@ -292,6 +292,7 @@ const UsersTable = ({ users, isLoading, onUpdateUser, onUserDeleted }) => {
                                                 className="btn-update"
                                                 onClick={() => onUpdateUser(user)}
                                                 title={t('users.updateUser', 'Update User')}
+                                                aria-label={t('users.updateUser', 'Update User')}
                                             >
                                                 <Edit size={14} />
                                                 {t('users.update', 'Update')}
@@ -301,6 +302,7 @@ const UsersTable = ({ users, isLoading, onUpdateUser, onUserDeleted }) => {
                                                 onClick={() => handleDeleteClick(user)}
                                                 disabled={deletingUser === user.id}
                                                 title={t('users.deleteUser', 'Delete User')}
+                                                aria-label={t('users.deleteUser', 'Delete User')}
                                             >
                                                 {deletingUser === user.id ? (
                                                     <div className="loading-spinner"></div>
