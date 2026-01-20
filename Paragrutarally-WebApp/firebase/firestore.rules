@@ -37,10 +37,11 @@ service cloud.firestore {
         return userHasRole('host') || userHasRole('guest');
       }
 
-      function isKidParent() {
-        return isAuthenticated() &&
-          get(/databases/$(database)/documents/kids/$(kidId)).data.parentInfo.parentId == request.auth.uid;
-      }
+	      function isKidParent() {
+	        return isAuthenticated() &&
+	          get(/databases/$(database)/documents/kids/$(kidId)).data.parentInfo is map &&
+	          get(/databases/$(database)/documents/kids/$(kidId)).data.parentInfo.parentId == request.auth.uid;
+	      }
 
       function isOrgCommentsOnlyUpdate() {
         // Only allow updating comments.organization (no other fields).

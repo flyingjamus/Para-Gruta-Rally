@@ -294,42 +294,50 @@ export function AuthProvider({ children }) {
                     // Add delay before email search
                     await delay(1000);
 
-                    const usersRef = collection(db, 'users');
-                    const emailQuery = query(usersRef, where('email', '==', user.email));
-
-                    // Retry email query as well
-                    let emailFound = false;
-                    for (let attempt = 1; attempt <= 3; attempt++) {
-
-                        const emailQuerySnapshot = await getDocs(emailQuery);
-
-                        if (!emailQuerySnapshot.empty) {
-                            const existingUserDoc = emailQuerySnapshot.docs[0];
-                            actualDocId = existingUserDoc.id;
-                            firestoreData = existingUserDoc.data();
-
-                            emailFound = true;
-                            break;
-                        }
-
-                        if (attempt < 3) {
-                            const waitTime = 1000 * Math.pow(2, attempt - 1);
-                            await delay(waitTime);
-                        }
-                    }
-
-                    if (emailFound && firestoreData) {
-                        // IMPORTANT: Copy the data to the correct UID document for future lookups
-
+                    // NOTE: Querying the users collection is not allowed by our Firestore rules for non-admin users.
+                    // Only attempt legacy email lookup when an email exists; if it fails (e.g. permission-denied),
+                    // fall back to creating the UID-based document.
+                    if (user.email) {
                         try {
-                            await setDoc(userRef, {
-                                ...firestoreData,
-                                lastLogin: serverTimestamp()
-                            });
+                            const usersRef = collection(db, 'users');
+                            const emailQuery = query(usersRef, where('email', '==', user.email));
 
-                            // Wait a bit for the write to propagate
-                            await delay(500);
-                        } catch (copyError) {
+                            // Retry email query as well
+                            let emailFound = false;
+                            for (let attempt = 1; attempt <= 3; attempt++) {
+
+                                const emailQuerySnapshot = await getDocs(emailQuery);
+
+                                if (!emailQuerySnapshot.empty) {
+                                    const existingUserDoc = emailQuerySnapshot.docs[0];
+                                    actualDocId = existingUserDoc.id;
+                                    firestoreData = existingUserDoc.data();
+
+                                    emailFound = true;
+                                    break;
+                                }
+
+                                if (attempt < 3) {
+                                    const waitTime = 1000 * Math.pow(2, attempt - 1);
+                                    await delay(waitTime);
+                                }
+                            }
+
+                            if (emailFound && firestoreData) {
+                                // IMPORTANT: Copy the data to the correct UID document for future lookups
+                                try {
+                                    await setDoc(userRef, {
+                                        ...firestoreData,
+                                        lastLogin: serverTimestamp()
+                                    });
+
+                                    // Wait a bit for the write to propagate
+                                    await delay(500);
+                                } catch (copyError) {
+                                }
+                            }
+                        } catch (emailLookupError) {
+                            console.warn('Email lookup failed, falling back to UID document:', emailLookupError);
                         }
                     }
                 }
@@ -432,6 +440,8 @@ export function AuthProvider({ children }) {
                     setUserRole(userRole);
                     setError(null);
 
+                    setLoading(false);
+                    setAuthInitialized(true);
                 }
             } catch (firestoreError) {
                 console.error("Error in auth state change handler:", firestoreError);
@@ -441,6 +451,10 @@ export function AuthProvider({ children }) {
                 setCurrentUser(null);
                 setUserData(null);
                 setUserRole(null);
+
+                // Avoid getting stuck in the initialization spinner on read/write failures.
+                setLoading(false);
+                setAuthInitialized(true);
             }
         });
 

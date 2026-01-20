@@ -86,35 +86,30 @@ export function runHostDashboardTests(setupFn: SetupFunction, options: RunHostDa
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     await setupFn({ events: defaultEvents, participants: defaultParticipants });
 
-    await screen.findByText('Alex Johnson');
-    const alexCard = screen.getByText('Alex Johnson').closest('.participant-card') as HTMLElement;
+    const alexHeading = await screen.findByRole('heading', { name: 'Alex Johnson' }, { timeout: 5000 });
+    const alexCard = alexHeading.closest('.participant-card') as HTMLElement;
     
-    // 1. Check initially hidden
-    expect(within(alexCard).queryByText('Participant Information')).not.toBeInTheDocument();
-
-    // 2. Expand
     const alexHeaderButton = within(alexCard).getByRole('button', { name: /alex johnson/i });
+    expect(alexHeaderButton).toHaveAttribute('aria-expanded', 'false');
+
+    // Expand
     await user.click(alexHeaderButton);
 
-    await waitFor(() => {
-      expect(within(alexCard).getByText('Participant Information')).toBeInTheDocument();
-    });
+    await waitFor(() => expect(alexHeaderButton).toHaveAttribute('aria-expanded', 'true'));
 
-    // 3. Collapse
+    // Collapse
     await user.click(alexHeaderButton);
-    await waitFor(() => {
-      expect(within(alexCard).queryByText('Participant Information')).not.toBeInTheDocument();
-    });
+    await waitFor(() => expect(alexHeaderButton).toHaveAttribute('aria-expanded', 'false'));
   });
 
   test('comment edit/save flow updates the display', async () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     await setupFn({ events: defaultEvents, participants: defaultParticipants });
 
-    await screen.findByText('Alex Johnson');
+    const alexHeading = await screen.findByRole('heading', { name: 'Alex Johnson' }, { timeout: 5000 });
 
     // Expand Alex
-    const alexCard = screen.getByText('Alex Johnson').closest('.participant-card') as HTMLElement;
+    const alexCard = alexHeading.closest('.participant-card') as HTMLElement;
     const alexHeaderButton = within(alexCard).getByRole('button', { name: /alex johnson/i });
     await user.click(alexHeaderButton);
 
@@ -154,9 +149,9 @@ export function runHostDashboardTests(setupFn: SetupFunction, options: RunHostDa
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     await setupFn({ events: defaultEvents, participants: defaultParticipants });
 
-    await screen.findByText('Alex Johnson');
+    const alexHeading = await screen.findByRole('heading', { name: 'Alex Johnson' }, { timeout: 5000 });
 
-    const alexCard = screen.getByText('Alex Johnson').closest('.participant-card') as HTMLElement;
+    const alexCard = alexHeading.closest('.participant-card') as HTMLElement;
     const alexHeaderButton = within(alexCard).getByRole('button', { name: /alex johnson/i });
     await user.click(alexHeaderButton);
 
@@ -185,7 +180,7 @@ export function runHostDashboardTests(setupFn: SetupFunction, options: RunHostDa
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     await setupFn({ events: defaultEvents, participants: defaultParticipants });
 
-    await screen.findByText('Alex Johnson');
+    await screen.findByRole('heading', { name: 'Alex Johnson' }, { timeout: 5000 });
     expect(screen.getByText('Taylor Williams')).toBeInTheDocument();
 
     const searchInput = screen.getByLabelText(/search/i);

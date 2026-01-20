@@ -28,13 +28,20 @@
 
 ## Firebase emulator integration
 - Run integration tests under `firebase emulators:exec` so the test process gets `FIRESTORE_EMULATOR_HOST` / `FIREBASE_AUTH_EMULATOR_HOST`.
+- Prefer `vitest run --no-file-parallelism` for emulator integration runs (Firebase SDK is singleton-heavy; parallel test files can interfere with each other).
 - Seed Firestore data with admin privileges (e.g., `RulesTestEnvironment.withSecurityRulesDisabled(...)`) so security rules don’t block setup.
 - Authenticate the Firebase client before reads/writes when rules require it (e.g., `signInAnonymously(auth)` for rules that only require `request.auth != null`).
 - Clear emulator state between tests (e.g., `RulesTestEnvironment.clearFirestore()`).
 - Keep emulator-facing tests explicit and separate from pure unit tests (this repo uses `test/**/*.ui.spec.tsx` for jsdom tests).
+- Avoid querying the `users` collection from the client in tests unless rules allow it (our rules generally allow `read` on `/users/{uid}` but not `list`); seed `/users/{uid}` directly with `withSecurityRulesDisabled`.
+
+## Shared test suites (`*.tests.ts`)
+- Shared “runXYZTests(setupFn)” helpers should be order-independent: never assume “the first button/card is the one we want”.
+- Scope interactions to the right container: find the card/section first, then `within(card).getByRole(...)`.
+- In async pages, wait for the specific section + content you need (e.g., `await screen.findByText('Available Forms')` and `await within(section).findByText(formTitle)`), not just “any occurrence of the title”.
+- Not every test belongs in both unit and integration: keep “simulateError” / forced failure tests unit-only (integration should validate rules + wiring, not internal error injection).
 
 ## What to avoid
 - Don’t assert on CSS classes or layout unless that’s the feature under test.
 - Don’t over-mock React internals; mock network/services instead.
 - Don’t couple to Radix portal structure; assert on roles like `dialog`/`alertdialog`.
-
