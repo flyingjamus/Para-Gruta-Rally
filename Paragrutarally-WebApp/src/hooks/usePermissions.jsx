@@ -196,6 +196,7 @@ const createRolePermissions = (userRole = 'guest') => {
             case 'guest':
                 return true; // Hosts can edit specific fields defined in FIELD_PERMISSIONS
             case 'parent':
+                return kid?.parentInfo?.parentId === user?.uid;
             default:
                 return false;
         }

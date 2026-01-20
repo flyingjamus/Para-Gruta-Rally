@@ -532,7 +532,7 @@ const ParentKidEditModal = ({ kid, isOpen, onClose, onSuccess }) => {
 
     return (
         <div className="parent-kid-edit-overlay" onClick={handleClose}>
-            <div className="parent-kid-edit-modal" onClick={(e) => e.stopPropagation()} dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="parent-kid-edit-modal" data-testid="parent-kid-edit-modal" onClick={(e) => e.stopPropagation()} dir={isRTL ? 'rtl' : 'ltr'}>
 
                 {/* Header */}
                 <header className="edit-modal-header">
