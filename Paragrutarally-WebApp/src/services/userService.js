@@ -337,10 +337,10 @@ export const testCloudFunctions = async () => {
 export const getUserKids = async (userId) => {
     try {
         const kidsRef = collection(db, 'kids');
-        // Fixed: Query by parentInfo.parentId instead of parentId
+        // Fixed: Query by parentInfo.parentIds instead of parentId
         const q = query(
             kidsRef,
-            where('parentInfo.parentId', '==', userId),
+            where('parentInfo.parentIds', 'array-contains', userId),
             orderBy('participantNumber', 'asc')
         );
 

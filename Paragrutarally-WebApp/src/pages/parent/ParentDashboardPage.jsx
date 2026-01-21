@@ -57,10 +57,10 @@ const ParentDashboardPage = () => {
         try {
             setError('');
 
-            // Load kids where parentInfo.parentId matches current user
+            // Load kids where parentInfo.parentIds contains current user
             const kidsQuery = query(
                 collection(db, 'kids'),
-                where('parentInfo.parentId', '==', user.uid),
+                where('parentInfo.parentIds', 'array-contains', user.uid),
                 orderBy('personalInfo.firstName', 'asc')
             );
 

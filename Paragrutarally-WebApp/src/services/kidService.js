@@ -13,8 +13,8 @@ import {
     updateDoc,
     where
 } from 'firebase/firestore';
-import {db} from '../firebase/config';
-import {convertFirestoreToKid, getKidFullName, prepareKidForFirestore, validateKid} from '../schemas/kidSchema';
+import { db } from '../firebase/config';
+import { convertFirestoreToKid, getKidFullName, prepareKidForFirestore, validateKid } from '../schemas/kidSchema';
 
 /**
  * Get the next available participant number
@@ -447,7 +447,7 @@ export const getKidsByParent = async (parentId) => {
     try {
         const kidsQuery = query(
             collection(db, 'kids'),
-            where('parentInfo.parentId', '==', parentId),
+            where('parentInfo.parentIds', 'array-contains', parentId),
             orderBy('participantNumber', 'asc')
         );
 

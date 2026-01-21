@@ -69,54 +69,35 @@ describeWithFirestoreEmulator('ParentDashboardPage (Integration)', () => {
     const setupIntegration = async (data?: TestData) => {
         if (!data) return;
 
-        // 1. Seed Database
-        await testEnv.withSecurityRulesDisabled(async (context) => {
-            const db = context.firestore();
-
-            // Create Parent User (mock data uses 'parent-123')
-            await db.collection('users').doc('parent-123').set({
-                role: 'parent',
-                email: 'john@example.com',
-                displayName: 'John Smith'
-            });
-
-            // Seed Kids
-            for (const kid of data.kids) {
-                await db.collection('kids').doc(kid.id).set(kid);
-            }
-        });
-
         // 2. Authenticate
-        // We need to sign in as the parent user 'parent-123' ideally, but anonymous auth yields a random UID.
-        // For integration tests relying on security rules, strictly speaking we should match the UID.
-        // However, `setupIntegration` is called by `runParentDashboardTests` which uses the data's `parentInfo.parentId`.
-        // Let's sign in anonymously and then set that user up as rights holder or just rely on the fact 
-        // that our app logic mocked in AuthContext (via Provider) or real Auth logic handles it.
-        // Wait, we are using REAL AuthProvider. So "currentUser" will be the anon user.
-        // For the app to think we are "John Smith", the User document corresponding to the Auth UID must exist.
-
         const userCredential = await import('firebase/auth').then(m => m.signInAnonymously(auth));
         const uid = userCredential.user.uid;
 
         await testEnv.withSecurityRulesDisabled(async (context) => {
-            // Map the anon uid to the parent role
+            const db = context.firestore();
+
+            // Create Parent User
             await context.firestore().collection('users').doc(uid).set({
                 role: 'parent',
                 email: 'john@example.com',
                 displayName: 'John Smith'
             });
 
-            // IMPORTANT: The kids in `defaultKids` have `parentInfo.parentId: 'parent-123'`. 
-            // If the app checks `kid.parentInfo.parentId === user.uid` for access, this mismatch will fail.
-            // If the app relies on `user.role === 'parent'`, it might be fine, but let's be safe.
-            // We should update the kids to belong to THIS user.
-            const db = context.firestore();
+            // Seed Kids with correct parent fields
             for (const kid of data.kids) {
-                await db.collection('kids').doc(kid.id).update({
-                    'parentInfo.parentId': uid
-                });
+                const kidWithAuth = {
+                    ...kid,
+                    parentInfo: {
+                        ...kid.parentInfo,
+                        parentIds: [uid]
+                    }
+                };
+                await db.collection('kids').doc(kid.id).set(kidWithAuth);
             }
         });
+
+        // Small delay to ensure Firestore writes are visible
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         // 3. Render with Providers
         render(
@@ -174,5 +155,62 @@ describeWithFirestoreEmulator('ParentDashboardPage (Integration)', () => {
         expect(
             await screen.findByText('Access denied: Parent credentials required')
         ).toBeInTheDocument();
+    });
+
+    test('allows access for secondary parent (in parentIds but not parentId)', async () => {
+        // 1. Authenticate as "Secondary Parent"
+        const userCredential = await import('firebase/auth').then(m => m.signInAnonymously(auth));
+        const uid = userCredential.user.uid;
+
+        await testEnv.withSecurityRulesDisabled(async (context) => {
+            const db = context.firestore();
+            // Create Secondary Parent User
+            await db.collection('users').doc(uid).set({
+                role: 'parent',
+                email: 'secondary@example.com',
+                displayName: 'Secondary Parent'
+            });
+
+            // Create a Kid with PRIMARY parent being someone else, but SECONDARY parent in parentIds
+            await db.collection('kids').doc('shared-kid').set({
+                participantNumber: '999',
+                personalInfo: {
+                    firstName: 'Shared',
+                    lastName: 'Kid',
+                    dateOfBirth: '2015-01-01',
+                    address: '123 Shared St',
+                    capabilities: 'None'
+                },
+                parentInfo: {
+                    parentId: 'primary-parent-id', // DIFFERENT ID
+                    parentIds: ['primary-parent-id', uid], // CURRENT USER IS HERE
+                    name: 'Primary Parent',
+                    email: 'primary@example.com',
+                    phone: '555-1111'
+                },
+                comments: { parent: '' },
+                signedDeclaration: false,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+        });
+
+        // 2. Render Page
+        render(
+            <AuthProvider>
+                <ThemeProvider>
+                    <LanguageContext.Provider value={mockLanguageContext}>
+                        <PermissionProvider>
+                            <MemoryRouter>
+                                <ParentDashboardPage />
+                            </MemoryRouter>
+                        </PermissionProvider>
+                    </LanguageContext.Provider>
+                </ThemeProvider>
+            </AuthProvider>
+        );
+
+        // 3. Verify Access
+        expect(await screen.findByText('Shared Kid')).toBeInTheDocument();
     });
 });

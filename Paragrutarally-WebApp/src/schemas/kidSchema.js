@@ -27,7 +27,9 @@ export const createEmptyKid = () => ({
         name: '',
         email: '',
         phone: '',
-        parentId: '', // Reference to parent user document
+        phone: '',
+        parentId: '', // DEPRECATED: Use parentIds instead
+        parentIds: [], // Reference to parent user documents (plural)
         grandparentsInfo: {
             names: '',
             phone: ''
@@ -266,6 +268,17 @@ export const prepareKidForFirestore = (kidData, isUpdate = false) => {
         return cleaned;
     };
 
+    // Sync parentId and parentIds for backward compatibility
+    if (cleanData.parentInfo) {
+        // If parentId is set but not in parentIds, add it
+        if (cleanData.parentInfo.parentId &&
+            (!cleanData.parentInfo.parentIds || !cleanData.parentInfo.parentIds.includes(cleanData.parentInfo.parentId))) {
+            cleanData.parentInfo.parentIds = cleanData.parentInfo.parentIds || [];
+            cleanData.parentInfo.parentIds.push(cleanData.parentInfo.parentId);
+        }
+
+    }
+
     return cleanObject(cleanData);
 };
 
@@ -284,6 +297,15 @@ export const convertFirestoreToKid = (doc) => {
         ...data,
         id: doc.id
     };
+
+    // Ensure parentIds exists
+    if (mergedData.parentInfo && !mergedData.parentInfo.parentIds) {
+        mergedData.parentInfo.parentIds = [];
+        // Migration: If parentId exists but parentIds doesn't, allow migration logic here or lazily
+        if (mergedData.parentInfo.parentId) {
+            mergedData.parentInfo.parentIds.push(mergedData.parentInfo.parentId);
+        }
+    }
 
     // Convert Firestore Timestamps to Date objects for display
     if (mergedData.createdAt?.toDate) {

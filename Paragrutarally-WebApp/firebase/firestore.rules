@@ -91,8 +91,16 @@ service cloud.firestore {
             && resource.data != null
             && "parentInfo" in resource.data
             && resource.data.parentInfo is map
-            && "parentId" in resource.data.parentInfo
-            && resource.data.parentInfo.parentId == uid();
+            && (
+              // Check parentIds array (new way)
+              ("parentIds" in resource.data.parentInfo 
+               && resource.data.parentInfo.parentIds is list 
+               && uid() in resource.data.parentInfo.parentIds)
+              || 
+              // Fallback to parentId (old way) for backward compatibility
+              ("parentId" in resource.data.parentInfo 
+               && resource.data.parentInfo.parentId == uid())
+            );
       }
 
       function isOrgCommentsOnlyUpdate() {

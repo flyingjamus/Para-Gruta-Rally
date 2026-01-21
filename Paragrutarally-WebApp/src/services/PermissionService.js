@@ -74,32 +74,38 @@ export class PermissionService {
                 return true;
 
             case 'parent':
-            { if (!kidData || kidData.parentInfo?.parentId !== this.user.uid) {
-                return false;
-            }
+                {
+                    const parentInfo = kidData?.parentInfo || {};
+                    const isParent = (parentInfo.parentIds && parentInfo.parentIds.includes(this.user.uid)) ||
+                        (parentInfo.parentId === this.user.uid);
 
-                const parentCanView = [
-                    'participantNumber', 'firstName', 'lastName', 'fullName',
-                    'personalInfo.address', 'address', 'personalInfo.dateOfBirth',
-                    'dateOfBirth', 'personalInfo.capabilities', 'personalInfo.announcersNotes',
-                    'personalInfo.photo', 'parentInfo.name', 'guardianName',
-                    'parentInfo.email', 'email', 'parentInfo.phone', 'contactNumber',
-                    'parentInfo.grandparentsInfo', 'comments.parent', 'notes',
-                    'signedDeclaration', 'signedFormStatus',
-                    'vehicle.make', 'vehicle.model', 'vehicle.licensePlate', 'vehicle.photo'
-                ];
+                    if (!kidData || !isParent) {
+                        return false;
+                    }
 
-                const parentCannotView = [
-                    'comments.organization', 'comments.teamLeader', 'comments.familyContact',
-                    'instructorComments', 'medicalNotes', 'emergencyContact', 'emergencyPhone',
-                    'vehicle.batteryType', 'vehicle.batteryDate', 'vehicle.driveType',
-                    'vehicle.steeringType', 'vehicle.notes', 'vehicle.modifications'
-                ];
+                    const parentCanView = [
+                        'participantNumber', 'firstName', 'lastName', 'fullName',
+                        'personalInfo.address', 'address', 'personalInfo.dateOfBirth',
+                        'dateOfBirth', 'personalInfo.capabilities', 'personalInfo.announcersNotes',
+                        'personalInfo.photo', 'parentInfo.name', 'guardianName',
+                        'parentInfo.email', 'email', 'parentInfo.phone', 'contactNumber',
+                        'parentInfo.grandparentsInfo', 'comments.parent', 'notes',
+                        'signedDeclaration', 'signedFormStatus',
+                        'vehicle.make', 'vehicle.model', 'vehicle.licensePlate', 'vehicle.photo'
+                    ];
 
-                if (parentCannotView.includes(field)) return false;
-                return parentCanView.some(pattern =>
-                    field.startsWith(pattern.replace('.*', '')) || field === pattern
-                ); }
+                    const parentCannotView = [
+                        'comments.organization', 'comments.teamLeader', 'comments.familyContact',
+                        'instructorComments', 'medicalNotes', 'emergencyContact', 'emergencyPhone',
+                        'vehicle.batteryType', 'vehicle.batteryDate', 'vehicle.driveType',
+                        'vehicle.steeringType', 'vehicle.notes', 'vehicle.modifications'
+                    ];
+
+                    if (parentCannotView.includes(field)) return false;
+                    return parentCanView.some(pattern =>
+                        field.startsWith(pattern.replace('.*', '')) || field === pattern
+                    );
+                }
 
             case 'instructor':
                 if (!kidData || kidData.instructorId !== this.userData.instructorId) {
@@ -108,21 +114,23 @@ export class PermissionService {
                 return true;
 
             case 'guest':
-            { const guestCanView = [
-                'firstName', 'lastName', 'personalInfo.address', 'address',
-                'personalInfo.capabilities', 'personalInfo.announcersNotes',
-                'parentInfo.name', 'guardianName', 'parentInfo.phone', 'contactNumber',
-                'vehicle.make', 'vehicle.model', 'participantNumber'
-            ];
+                {
+                    const guestCanView = [
+                        'firstName', 'lastName', 'personalInfo.address', 'address',
+                        'personalInfo.capabilities', 'personalInfo.announcersNotes',
+                        'parentInfo.name', 'guardianName', 'parentInfo.phone', 'contactNumber',
+                        'vehicle.make', 'vehicle.model', 'participantNumber'
+                    ];
 
-                const guestCannotView = [
-                    'parentInfo.email', 'email', 'comments.parent', 'comments.familyContact',
-                    'parentInfo.grandparentsInfo', 'signedDeclaration', 'emergencyContact',
-                    'emergencyPhone'
-                ];
+                    const guestCannotView = [
+                        'parentInfo.email', 'email', 'comments.parent', 'comments.familyContact',
+                        'parentInfo.grandparentsInfo', 'signedDeclaration', 'emergencyContact',
+                        'emergencyPhone'
+                    ];
 
-                if (guestCannotView.includes(field)) return false;
-                return guestCanView.includes(field); }
+                    if (guestCannotView.includes(field)) return false;
+                    return guestCanView.includes(field);
+                }
 
             default:
                 return false;
@@ -138,7 +146,11 @@ export class PermissionService {
                 return true;
 
             case 'parent':
-                if (!kidData || kidData.parentInfo?.parentId !== this.user.uid) {
+                const parentInfo = kidData?.parentInfo || {};
+                const isParent = (parentInfo.parentIds && parentInfo.parentIds.includes(this.user.uid)) ||
+                    (parentInfo.parentId === this.user.uid);
+
+                if (!kidData || !isParent) {
                     return false;
                 }
                 return [
@@ -171,7 +183,9 @@ export class PermissionService {
             case 'admin':
                 return true;
             case 'parent':
-                return kidData.parentInfo?.parentId === this.user.uid;
+                const parentInfo = kidData?.parentInfo || {};
+                return (parentInfo.parentIds && parentInfo.parentIds.includes(this.user.uid)) ||
+                    (parentInfo.parentId === this.user.uid);
             case 'instructor':
                 return kidData.instructorId === this.userData.instructorId;
             case 'guest':

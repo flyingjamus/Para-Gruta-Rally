@@ -19,7 +19,7 @@ export const defaultKids = [
             capabilities: 'None',
         },
         parentInfo: {
-            parentId: 'parent-123',
+            parentIds: ['parent-123'],
             name: 'John Smith',
             email: 'john@example.com',
             phone: '555-0101',
@@ -41,7 +41,7 @@ export const defaultKids = [
             capabilities: 'Needs assistance',
         },
         parentInfo: {
-            parentId: 'parent-123',
+            parentIds: ['parent-123'],
             name: 'John Smith',
             email: 'john@example.com',
             phone: '555-0101',
@@ -159,7 +159,7 @@ export function runParentDashboardTests(setupFn: SetupFunction, options: RunPare
         await waitFor(() => {
             expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
         });
-        
+
         expect(await screen.findByText(newComment)).toBeInTheDocument();
 
         if (options.afterCommentSaved) {
@@ -208,7 +208,7 @@ export function runParentDashboardTests(setupFn: SetupFunction, options: RunPare
 
         const commentsHeading = await within(oliverCard).findByRole('heading', { name: /My Comments/i });
         const commentsSection = commentsHeading.closest('.detail-section') as HTMLElement;
-        
+
         expect(within(commentsSection).getByText('No comments added yet')).toBeInTheDocument();
 
         expect(within(commentsSection).getByRole('button', { name: /add comments/i })).toBeInTheDocument();

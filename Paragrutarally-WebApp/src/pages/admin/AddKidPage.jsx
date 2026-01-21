@@ -42,7 +42,7 @@ const AddKidPage = () => {
     const navigate = useNavigate();
     const { isDarkMode, appliedTheme } = useTheme();
     const { permissions, userRole } = usePermissions();
-    const { t , isHebrew, isRTL} = useLanguage();
+    const { t, isHebrew, isRTL } = useLanguage();
     const formStatusOptions = getFormStatusOptions(t);
     const [isLoading, setIsLoading] = useState(false);
     const [teams, setTeams] = useState([]);
@@ -304,7 +304,7 @@ const AddKidPage = () => {
                         name: parent.name || parent.displayName || '',
                         email: parent.email || '',
                         phone: parent.phone || '',
-                        parentId: parent.id,
+                        parentIds: [parent.id],
                         grandparentsInfo: prev.parentInfo.grandparentsInfo
                     }
                 }));
@@ -317,7 +317,7 @@ const AddKidPage = () => {
                     name: '',
                     email: '',
                     phone: '',
-                    parentId: '',
+                    parentIds: [],
                     grandparentsInfo: prev.parentInfo.grandparentsInfo
                 }
             }));

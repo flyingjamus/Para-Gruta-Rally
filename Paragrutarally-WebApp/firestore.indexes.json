@@ -1,4 +1,19 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "kids",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentInfo.parentIds",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "personalInfo.firstName",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
