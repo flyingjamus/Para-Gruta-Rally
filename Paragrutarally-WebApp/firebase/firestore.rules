@@ -1,132 +1,225 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if user is admin
-    function isAdmin() {
-      return request.auth != null &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
 
+    /* ---------- Helpers ---------- */
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function userDocPath(userId) {
+      return /databases/$(database)/documents/users/$(userId);
+    }
+
+    function myUserDocExists() {
+      return isAuthenticated() && exists(userDocPath(uid()));
+    }
+
+    function myRole() {
+      // If the doc is missing, this evaluates to null.
+      return myUserDocExists() ? get(userDocPath(uid())).data.role : null;
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && myRole() == role;
+    }
+
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    function isHost() {
+      return hasRole('host');
+    }
+
+    function isGuest() {
+      return hasRole('guest');
+    }
+
+    function isHostOrGuest() {
+      return isHost() || isGuest();
+    }
+
     // User rules - users can read/write their own data, admins can read all
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow read: if isAuthenticated() && (uid() == userId || isAdmin());
+
+      function userSelfCreateAllowedKeys() {
+        return []; // No self-creation allowed
+      }
+
+      function userSelfUpdateAllowedKeys() {
+        return ['displayName', 'name', 'phone', 'photoURL', 'preferences', 'updatedAt', 'lastLogin'];
+      }
+
+      function roleUnchanged() {
+        // Prevent add/change/remove of role by non-admin.
+        return request.resource.data.role == resource.data.role;
+      }
+
+      // validUserSelfCreate removed - users cannot create their own profile
+
+      function validUserSelfUpdate() {
+        return isAuthenticated()
+            && uid() == userId
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(userSelfUpdateAllowedKeys())
+            && roleUnchanged()
+            && request.resource.data.updatedAt == request.time;
+      }
+
+      allow create: if isAdmin();
+      allow update: if validUserSelfUpdate() || isAdmin();
+      allow delete: if isAdmin();
+
     }
     
     // BACKUP RULES - Only admins can access backups
-    match /backups/{document} {
+    match /backups/{docId} {
       allow read, write: if isAdmin();
     }
-    
+
     // Kids collection - role-based access
     match /kids/{kidId} {
-      allow read: if isAuthenticated();
 
-      function userHasRole(role) {
-        return isAuthenticated() &&
-          exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+      function isKidParent() {
+        return isAuthenticated()
+            && resource != null
+            && resource.data != null
+            && "parentInfo" in resource.data
+            && resource.data.parentInfo is map
+            && "parentId" in resource.data.parentInfo
+            && resource.data.parentInfo.parentId == uid();
       }
-
-      function isHostOrGuest() {
-        return userHasRole('host') || userHasRole('guest');
-      }
-
-	      function isKidParent() {
-	        return isAuthenticated() &&
-	          get(/databases/$(database)/documents/kids/$(kidId)).data.parentInfo is map &&
-	          get(/databases/$(database)/documents/kids/$(kidId)).data.parentInfo.parentId == request.auth.uid;
-	      }
 
       function isOrgCommentsOnlyUpdate() {
         // Only allow updating comments.organization (no other fields).
-        return
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments']) &&
-          request.resource.data.comments is map &&
-          (
-            // If comments previously absent, allow creating just { organization }
-            resource.data.comments == null
-              ? request.resource.data.comments.keys().hasOnly(['organization'])
-              : request.resource.data.comments.diff(resource.data.comments).affectedKeys().hasOnly(['organization'])
-          ) &&
-          request.resource.data.comments.organization is string;
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['comments'])
+            && request.resource.data.comments is map
+            && (
+                                resource.data.comments == null
+                    ? request.resource.data.comments.keys().hasOnly(['organization'])
+                    : request.resource.data.comments.diff(resource.data.comments).affectedKeys().hasOnly(['organization'])
+            )
+            && request.resource.data.comments.organization is string;
       }
 
+      allow read: if isAuthenticated() && (isAdmin() || isHostOrGuest() || isKidParent());
+
       allow create, delete: if isAdmin();
-      allow update: if isAdmin() || isKidParent() || (isHostOrGuest() && isOrgCommentsOnlyUpdate());
+
+      allow update: if isAdmin()
+          || isKidParent()
+          || (isHostOrGuest() && isOrgCommentsOnlyUpdate());
     }
-    
+
     // Teams collection - instructors can edit their teams, others can read
     match /teams/{teamId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin() ||
-        (isAuthenticated() && 
-         request.auth.uid in get(/databases/$(database)/documents/teams/$(teamId)).data.instructorIds);
+
+      function isInstructorOnExistingTeam() {
+        return isAuthenticated()
+            && resource.data.instructorIds is list
+            && uid() in resource.data.instructorIds;
+      }
+
+      function instructorIdsUnchanged() {
+        // Prevent instructors from altering who has write access.
+        return request.resource.data.instructorIds is list
+            && request.resource.data.instructorIds == resource.data.instructorIds;
+      }
+
+      allow create: if isAdmin();
+
+      allow update: if isAdmin() || (isInstructorOnExistingTeam() && instructorIdsUnchanged());
+
+      allow delete: if isAdmin();
     }
-    
+
     // Events collection - allow authenticated users to read, admins to write
     match /events/{eventId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-    
+
     // Instructors collection
     match /instructors/{instructorId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-    
+
     // Event participants
     match /eventParticipants/{participantId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-    
+
     // Reports - admin only
     match /reports/{reportId} {
       allow read, write: if isAdmin();
     }
-    
+
     // Vehicles collection
     match /vehicles/{vehicleId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
-    
+
     // Forms - Allow reading and incrementing view count
     match /forms/{formId} {
       allow read: if isAuthenticated();
-      allow create: if isAdmin();
-      allow delete: if isAdmin();
-      // Allow admins to update anything, or users to update only viewCount/updatedAt
-      allow update: if isAdmin() ||
-        (isAuthenticated() &&
-         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount', 'updatedAt']));
+      allow create, delete: if isAdmin();
+
+      function viewCountIncrementOnly() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount', 'updatedAt'])
+            && request.resource.data.viewCount is int
+            && resource.data.viewCount is int
+            && request.resource.data.viewCount == resource.data.viewCount + 1
+            && request.resource.data.updatedAt == request.time;
+      }
+
+      allow update: if isAdmin() || (isAuthenticated() && viewCountIncrementOnly());
     }
 
-    // Form submissions - FIXED: Changed submittedBy to submitterId throughout
     match /form_submissions/{submissionId} {
-      allow read: if isAuthenticated() &&
-        (isAdmin() || resource.data.submitterId == request.auth.uid);
-      allow create: if isAuthenticated() &&
-        request.resource.data.submitterId == request.auth.uid;
-      allow update: if isAdmin() ||
-        (isAuthenticated() &&
-         resource.data.submitterId == request.auth.uid &&
-         request.resource.data.submitterId == request.auth.uid);
+      allow read: if isAuthenticated() && (isAdmin() || resource.data.submitterId == uid());
+
+      function validSubmissionCreate() {
+        // Adjust keys to match your schema (this is a safe default).
+        return isAuthenticated()
+            && request.resource.data.keys().hasOnly(['formId', 'submitterId', 'answers', 'createdAt', 'updatedAt'])
+            && request.resource.data.submitterId == uid()
+            && request.resource.data.createdAt == request.time
+            && request.resource.data.updatedAt == request.time;
+      }
+
+      function validSubmissionSelfUpdate() {
+        return isAuthenticated()
+            && resource.data.submitterId == uid()
+            && request.resource.data.submitterId == uid()
+            && request.resource.data.formId == resource.data.formId
+            && request.resource.data.createdAt == resource.data.createdAt
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answers', 'updatedAt'])
+            && request.resource.data.updatedAt == request.time;
+      }
+
+      allow create: if validSubmissionCreate();
+      allow update: if isAdmin() || validSubmissionSelfUpdate();
       allow delete: if isAdmin();
     }
-    
+
     // Form assignments - admin can manage, users can read their own
     match /form_assignments/{assignmentId} {
-      allow read: if isAuthenticated() && 
-        (resource.data.userId == request.auth.uid || isAdmin());
+      allow read: if isAuthenticated() && (resource.data.userId == uid() || isAdmin());
       allow write: if isAdmin();
+    }
+
+    /* ---------- Explicit default deny ---------- */
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
